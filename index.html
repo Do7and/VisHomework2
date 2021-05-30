@@ -158,7 +158,7 @@ function ended(event, d) {
           height = 1200 - margin.top - margin.bottom,
           
           gridSize = Math.floor(width / 46),    // 房间格子大小，即去掉小数部分，width分成20份
-          gridInnerSize=gridSize-10,
+          gridInnerSize=gridSize-0,
 
           legendElementWidth = gridSize * 1.8,    // 下部图例格子的长度，是房间格子边长的两倍
           
@@ -197,8 +197,8 @@ function ended(event, d) {
 			  .append("text")
 				.text(function(d) { return d; })
 				.attr("x", function(d, i) { return i * gridSize; })
-				.attr("y", 0)
-				.style("text-anchor", "end")
+				.attr("y", 1200)
+				.style('writing-mode','tb-rl')
 				.attr("transform", "translate(" + gridSize / 2 + ", -12)")
 				.attr("class", function(d, i) { 
 						return ( "testLabel mono axis"); }
@@ -211,36 +211,35 @@ function ended(event, d) {
 		  
 		  //console.log(minT);
 		  //绘制房间格子，一开始全部是白色
-		  var minsvg= d3.select("#temperatureHeatMapMIN").append("svg") // 
+		  var minsvg= d3.select("#matrixview").append("svg") // 
 			  .attr("width", width + margin.left + margin.right)
 			  .attr("height", height + margin.top + margin.bottom)
 			  .append("g")    // 在svg内加入一个g（group组），并设置元素g的显示位置
 			  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-		  var minheatMap = minsvg.selectAll(".preprocess_min_data")
+		  var minheatMap = minsvg.selectAll(".heatmap")
 			  .data(adjmatrix)
 			  .enter()        
 			  .append("rect")
 			  .attr("x", function(d, i){ return (i % 46)*gridSize;})
 			  .attr("y", function(d, i){ return parseInt(i / 46)*(gridSize);})
-			  .attr("rx", 2)
-			  .attr("ry", 2)
+			  .attr("rx", 1)
+			  .attr("ry", 1)
 			  .attr("class", "bordered")
 			  .attr("width", gridInnerSize)
 			  .attr("height", gridInnerSize)
-			  .style("fill", "#FFFFFF");
-
-
-		  // duration(n) 在n毫秒内根据房间内人数为房间格子上色
-		  minheatMap.transition().duration(2000)
 			  .style("fill", function(d) { 
-				  if (d == 0){
-					//console.log("NAN")
-					return "#FFFFFF";
+				  if (parseInt(d) >= 1){
+					console.log(d)
+					return "#1f1e33";
 				  }
 				  //console.log("NONAN")
-				  return "#1f1e33";
+					console.log(parseInt(d))
+				  return "#FFFFFF";
 			  });
+
+
+
 
 	});
     </script>

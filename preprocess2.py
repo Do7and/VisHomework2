@@ -38,13 +38,14 @@ for edge in json_data["edges"]:
 		adjmatrix[n2i[id2n[edge["target"]]]][n2i[id2n[edge["source"]]]] = radii
 print(edgelist)
 
-headrow = ["Y"+str(t) for t in range(i*i)]
+headrow = ["Y"]
 res = []
 for row in adjmatrix:
 	res += row
 print(headrow)
-csvfile = open('adjmatrix.csv', 'w',newline='')
-writer = csv.writer(csvfile)
-writer.writerow(headrow)
-writer.writerow(res)
-csvfile.close()
+with open('adjmatrix.csv', 'w', newline='') as f:
+	writer = csv.DictWriter(f, headrow)
+	writer.writeheader()
+	for row in res:
+		writer.writerow({"Y":row})
+
