@@ -14,7 +14,7 @@ id2n = {}
 print(type(json_data))
 for node in json_data["nodes"]:
 	if  node["dept"] == "CSE":
-		nodelist.append(node["fullname"])
+		nodelist.append({"name":node["fullname"],"radii":0})
 		n2i[node["fullname"]] = i
 		id2n[node["id"]] = node["fullname"]
 		i += 1
@@ -26,18 +26,21 @@ print(id2n.keys())
 edgelist = []
 for edge in json_data["edges"]:
 	if edge["source"] in id2n and edge["target"] in id2n:
-		edgelist.append({"source":n2i[id2n[edge["source"]]],"target":n2i[id2n[edge["target"]]],"radii":len(edge["publications"])})
+		edgelist.append({"source":n2i[id2n[edge["source"]]],"target":n2i[id2n[edge["target"]]]})
+		radii=len(edge["publications"])
+		nodelist[n2i[id2n[edge["source"]]]]["radii"] += radii
+		nodelist[n2i[id2n[edge["target"]]]]["radii"] += radii
 print(edgelist)
 
 
 x = input("enter to exit£º")
 
-headers1 = ["name"]
+headers1 = ["name","radii"]
 with open('nodes.csv', 'w', newline='') as f:
 	writer = csv.DictWriter(f, headers1)
 	writer.writeheader()
 	for row in nodelist:
-		writer.writerow({"name":row})
+		writer.writerow(row)
 headers2 = ["source","target","radii"]
 with open('edges.csv', 'w', newline='') as f:
 	writer = csv.DictWriter(f, headers2)
