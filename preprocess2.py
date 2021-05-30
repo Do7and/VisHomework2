@@ -38,7 +38,7 @@ for edge in json_data["edges"]:
 		adjmatrix[n2i[id2n[edge["target"]]]][n2i[id2n[edge["source"]]]] = radii
 print(edgelist)
 
-headrow = ["Y"+str(t) for t in range(i)]
+headrow = ["Y"+str(t) for t in range(i*i)]
 res = []
 for row in adjmatrix:
 	res += row

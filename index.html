@@ -165,7 +165,7 @@ function ended(event, d) {
           buckets = 11,        // 一共9种颜色级别
           colors = ["#5E4FA2","#3288BD","#66C2A5","#ABDDA4","#E6F598","#FFFFBF","#FEE08B","#FDAE61","#F46D43","#D53E4F","#9E0142"], 
           
-          years = ['Li, Xin', 'Papadopoulos, S', 'Liu, Yunhao', 'Yi, Ke', 'Zhang, Nevin L', 'Ng, WILFRED SIU HUNG', 'Mak, Brian K W', '', 'Rossiter, David P', 'Zhang, Qian', 'Shen, Helen C M', 'Chung, ALBERT CHI SHING', 'Li, Bo', 'Qu, Huamin', 'Gu, Lin', 'Zhang, Jin', 'Sander, Pedro V', 'Horner, Andrew B', 'Chan, Gary S H', 'Lochovsky, Frederick H', 'Chen, Lei', 'Ding, Cunsheng', 'Quan, LONG', 'Lin, Fangzhen', 'Bensaou, BRAHIM', 'Wong, Raymond C W', 'Wu, Dekai', 'Yeung, Dit Yan', 'Lee, Dik Lun', 'Kim, Sung Hun', 'Hamdi, Mounir', 'Papadias, Dimitrios', 'Golin, Mordecai J', 'Tai, Chiew Lan', 'Chan, Tony F', 'Kwok, JAMES', 'Muppala, K R Jogesh', 'Yang, Qiang', 'Leung, Wai Ting', 'Cheng, Siu Wing', 'Tang, Chi Keung', 'Hui, Pan', 'Ni, LIONEL', 'Lam, Gibson', 'Arya, Sunil', 'Luo, Qiong']
+          years = ['Li, Xin', 'Papadopoulos, S', 'Liu, Yunhao', 'Yi, Ke', 'Zhang, Nevin L', 'Ng, WILFRED SIU HUNG', 'Mak, Brian K W', 'None', 'Rossiter, David P', 'Zhang, Qian', 'Shen, Helen C M', 'Chung, ALBERT CHI SHING', 'Li, Bo', 'Qu, Huamin', 'Gu, Lin', 'Zhang, Jin', 'Sander, Pedro V', 'Horner, Andrew B', 'Chan, Gary S H', 'Lochovsky, Frederick H', 'Chen, Lei', 'Ding, Cunsheng', 'Quan, LONG', 'Lin, Fangzhen', 'Bensaou, BRAHIM', 'Wong, Raymond C W', 'Wu, Dekai', 'Yeung, Dit Yan', 'Lee, Dik Lun', 'Kim, Sung Hun', 'Hamdi, Mounir', 'Papadias, Dimitrios', 'Golin, Mordecai J', 'Tai, Chiew Lan', 'Chan, Tony F', 'Kwok, JAMES', 'Muppala, K R Jogesh', 'Yang, Qiang', 'Leung, Wai Ting', 'Cheng, Siu Wing', 'Tang, Chi Keung', 'Hui, Pan', 'Ni, LIONEL', 'Lam, Gibson', 'Arya, Sunil', 'Luo, Qiong']
 ;
 
            // 设置roomHeatMap，svg
@@ -206,12 +206,7 @@ function ended(event, d) {
 		  
 			// 网格数组,这里将二维数据转换为一维数组，一维数组方便于d3.js绑定
 			var minT = [];
-			for (var i = 0; i < 46; i++){
-				for (var j = 0; j< 46; j++){
-				
-				minT[i*46+j] = parseInt(adjmatrix[i][years[j]]);
-}
-		  };
+			
 		
 		  
 		  //console.log(minT);
@@ -223,7 +218,7 @@ function ended(event, d) {
 			  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 		  var minheatMap = minsvg.selectAll(".preprocess_min_data")
-			  .data(minT)
+			  .data(adjmatrix)
 			  .enter()        
 			  .append("rect")
 			  .attr("x", function(d, i){ return (i % 46)*gridSize;})
@@ -236,51 +231,17 @@ function ended(event, d) {
 			  .style("fill", "#FFFFFF");
 
 
-
-		  // 颜色比例尺
-		  var colorScale = d3.scale.quantile()        // 按分位数取值，可使每个区域内元素个数相等
-			  .domain(d3.min(minT))  // 定义域
-			  // domain([0, n, 数据的最大值]);
-			  .range(colors);    // 值域：是颜色数组，函数的返回值是代表某种颜色的字符串
-			
 		  // duration(n) 在n毫秒内根据房间内人数为房间格子上色
 		  minheatMap.transition().duration(2000)
 			  .style("fill", function(d) { 
-				  if (isNaN(d)){
+				  if (d == 0){
 					//console.log("NAN")
 					return "#FFFFFF";
 				  }
 				  //console.log("NONAN")
-				  return colorScale(d);
+				  return "#1f1e33";
 			  });
 
-		  // 鼠标停留在房间格子上时显示人数
-		  minheatMap.append("title").text(function(d,i) { return (i % 46+1997)+"年"+(parseInt(i / 46)+1)+"月最低气温为"+d+"℃"; });
-			  
-		  
-		  // 图例
-		  var legend = svg.selectAll(".legend")
-			  //[0].concat(colorScale.quantiles())将数组[0]与含有８个元素的olorScale.quantiles()连接起来得到一个有９个元素的数组
-			  .data([0].concat(colorScale.quantiles()), function(d) {
-			   return d;
-				})    
-			  .enter().append("g")
-			  .attr("class", "legend");
-
-		  legend.append("rect")
-			.attr("x", function(d, i) { return legendElementWidth * i; })
-			.attr("y", 12 * gridSize+15)
-			.attr("width", legendElementWidth)
-			.attr("height", gridSize/2)
-			.style("fill", function(d, i) { return colors[i]; });
-
-		  legend.append("text")
-			.attr("class", "mono")
-			.text(function(d) { 
-			  return ""+Math.round(d)+"℃";
-			   })
-			.attr("x", function(d, i) { return legendElementWidth * i+20; })
-			.attr("y", 13 * gridSize+30);
 	});
     </script>
     
