@@ -14,21 +14,20 @@
   
   <body>
 <div id='graphview' width="960" height='400'></div>
+<div id='matrixview' width="960" height='400'></div>
 
-    <script type="text/javascript">
+<script type="text/javascript">
 
-
-
-d3.dsv("https://raw.githubusercontent.com/Do7and/VisHomework2/main/nodes.csv", function(d) {
+d3.csv("https://raw.githubusercontent.com/Do7and/VisHomework2/main/nodes.csv", function(d) {
     return {
         name: d.name, 
         radii: d.radii
     };
 }).then(function(nodes) {
-d3.dsv("https://raw.githubusercontent.com/Do7and/VisHomework2/main/edges.csv", function(d) {
+d3.csv("https://raw.githubusercontent.com/Do7and/VisHomework2/main/edges.csv", function(d) {
     return {
-        source: d.source, 
-        target: d.target
+        source: +d.source, 
+        target: +d.target
     };
 }).then(function(edges) {
 //准备数据
@@ -37,7 +36,7 @@ console.log(edges);
 
 let width = window.innerWidth * 0.5
 let height = window.innerWidth * 0.5
-let svg = d3.select("#hggggraphview")
+let svg = d3.select("#graphview")
     .append('svg')
     .attr('width', width)
     .attr('height', height);
@@ -64,7 +63,7 @@ node = svg.append("g")
     .data(nodes)
     .join('circle')
     .attr("r", function (d, i) {
-        return 10;//d.radii
+        return d.radii/10;
     })
     .attr("fill", function (d, i) {
         return colorScale(i);
@@ -149,5 +148,143 @@ function ended(event, d) {
 })
 })
    </script>
+
+   <script type="text/javascript">
+    
+      // 定义Heatmap的位置、宽高、房间格子的边长等等与布局有关的变量
+      var margin = { top: 50, right: 0, bottom: 100, left: 150 },
+          
+          width = 1300 - margin.left - margin.right,        // Heatmap的宽度
+          height = 1200 - margin.top - margin.bottom,
+          
+          gridSize = Math.floor(width / 46),    // 房间格子大小，即去掉小数部分，width分成20份
+          gridInnerSize=gridSize-10,
+
+          legendElementWidth = gridSize * 1.8,    // 下部图例格子的长度，是房间格子边长的两倍
+          
+          buckets = 11,        // 一共9种颜色级别
+          colors = ["#5E4FA2","#3288BD","#66C2A5","#ABDDA4","#E6F598","#FFFFBF","#FEE08B","#FDAE61","#F46D43","#D53E4F","#9E0142"], 
+          
+          years = ['Li, Xin', 'Papadopoulos, S', 'Liu, Yunhao', 'Yi, Ke', 'Zhang, Nevin L', 'Ng, WILFRED SIU HUNG', 'Mak, Brian K W', '', 'Rossiter, David P', 'Zhang, Qian', 'Shen, Helen C M', 'Chung, ALBERT CHI SHING', 'Li, Bo', 'Qu, Huamin', 'Gu, Lin', 'Zhang, Jin', 'Sander, Pedro V', 'Horner, Andrew B', 'Chan, Gary S H', 'Lochovsky, Frederick H', 'Chen, Lei', 'Ding, Cunsheng', 'Quan, LONG', 'Lin, Fangzhen', 'Bensaou, BRAHIM', 'Wong, Raymond C W', 'Wu, Dekai', 'Yeung, Dit Yan', 'Lee, Dik Lun', 'Kim, Sung Hun', 'Hamdi, Mounir', 'Papadias, Dimitrios', 'Golin, Mordecai J', 'Tai, Chiew Lan', 'Chan, Tony F', 'Kwok, JAMES', 'Muppala, K R Jogesh', 'Yang, Qiang', 'Leung, Wai Ting', 'Cheng, Siu Wing', 'Tang, Chi Keung', 'Hui, Pan', 'Ni, LIONEL', 'Lam, Gibson', 'Arya, Sunil', 'Luo, Qiong']
+;
+
+           // 设置roomHeatMap，svg
+		  var svg = d3.select("#matrixview").append("svg") // 选择“roomHeatMap”（就是div），加入一个svg，设置属性跟div一样大
+			  .attr("width", width + margin.left + margin.right)
+			  .attr("height", height + margin.top + margin.bottom)
+			  .append("g")    // 在svg内加入一个g（group组），并设置元素g的显示位置
+			  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+			d3.csv("https://raw.githubusercontent.com/Do7and/VisHomework2/main/adjmatrix.csv",function (adjmatrix) {
+    console.log(adjmatrix);
+	
+
+		  // 行标题
+		  var dayLabels = svg.selectAll(".nameLabel")
+			  .data(adjmatrix)
+			  .enter()    // 为data中每一项创建一个".dayLabel"
+			  .append("text")    // 为days中每一项创建一的".dayLabel"添加文本，下面全是设置文本的属性
+				.text(function (d, i) { return mindata[i].month; })
+				.attr("x", 0)
+				.attr("y", function (d, i) { return i * (gridSize)-30; })
+				.style("text-anchor", "end")
+				.attr("transform", "translate(-4," + gridSize  + ")")
+				.attr("class", function (d, i) 
+						{ return ((i >= 0 && i <= 4) ? "nameLabel mono axis axis-workweek" : "nameLabel mono axis axis-worktime"); }
+					);
+ 
+		  // 列标题
+		  var timeLabels = svg.selectAll(".testLabel")
+			  .data(years)
+			  .enter().append("text")
+				.text(function(d) { return d; })
+				.attr("x", function(d, i) { return i * gridSize; })
+				.attr("y", 0)
+				.style("text-anchor", "end")
+				.attr("transform", "translate(" + gridSize / 2 + ", -12)")
+				.attr("class", function(d, i) { 
+						return ( "testLabel mono axis"); }
+					 );
+		  
+			// 网格数组,这里将二维数据转换为一维数组，一维数组方便于d3.js绑定
+			var minT = [];
+			for (var i = 0; i < 46; i++){
+				for (var j = 0; j< 46; j++){
+				}
+				minT[i*46+j] = parseInt(adjmatrix[i].years[j]);
+
+		  };
+		
+		  
+		  //console.log(minT);
+		  //绘制房间格子，一开始全部是白色
+		  var minsvg= d3.select("#temperatureHeatMapMIN").append("svg") // 
+			  .attr("width", width + margin.left + margin.right)
+			  .attr("height", height + margin.top + margin.bottom)
+			  .append("g")    // 在svg内加入一个g（group组），并设置元素g的显示位置
+			  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+		  var minheatMap = minsvg.selectAll(".preprocess_min_data")
+			  .data(minT)
+			  .enter()        
+			  .append("rect")
+			  .attr("x", function(d, i){ return (i % 46)*gridSize;})
+			  .attr("y", function(d, i){ return parseInt(i / 46)*(gridSize);})
+			  .attr("rx", 2)
+			  .attr("ry", 2)
+			  .attr("class", "bordered")
+			  .attr("width", gridInnerSize)
+			  .attr("height", gridInnerSize)
+			  .style("fill", "#FFFFFF");
+
+
+
+		  // 颜色比例尺
+		  var colorScale = d3.scale.quantile()        // 按分位数取值，可使每个区域内元素个数相等
+			  .domain([d3.min(minT),d3.max(maxT)])  // 定义域
+			  // domain([0, n, 数据的最大值]);
+			  .range(colors);    // 值域：是颜色数组，函数的返回值是代表某种颜色的字符串
+			
+		  // duration(n) 在n毫秒内根据房间内人数为房间格子上色
+		  minheatMap.transition().duration(2000)
+			  .style("fill", function(d) { 
+				  if (isNaN(d)){
+					//console.log("NAN")
+					return "#FFFFFF";
+				  }
+				  //console.log("NONAN")
+				  return colorScale(d);
+			  });
+
+		  // 鼠标停留在房间格子上时显示人数
+		  minheatMap.append("title").text(function(d,i) { return (i % 46+1997)+"年"+(parseInt(i / 46)+1)+"月最低气温为"+d+"℃"; });
+			  
+		  
+		  // 图例
+		  var legend = svg.selectAll(".legend")
+			  //[0].concat(colorScale.quantiles())将数组[0]与含有８个元素的olorScale.quantiles()连接起来得到一个有９个元素的数组
+			  .data([0].concat(colorScale.quantiles()), function(d) {
+			   return d;
+				})    
+			  .enter().append("g")
+			  .attr("class", "legend");
+
+		  legend.append("rect")
+			.attr("x", function(d, i) { return legendElementWidth * i; })
+			.attr("y", 12 * gridSize+15)
+			.attr("width", legendElementWidth)
+			.attr("height", gridSize/2)
+			.style("fill", function(d, i) { return colors[i]; });
+
+		  legend.append("text")
+			.attr("class", "mono")
+			.text(function(d) { 
+			  return ""+Math.round(d)+"℃";
+			   })
+			.attr("x", function(d, i) { return legendElementWidth * i+20; })
+			.attr("y", 13 * gridSize+30);
+	});
+    </script>
+    
   </body>
 </html>
