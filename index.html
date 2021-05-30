@@ -181,22 +181,20 @@ function ended(event, d) {
 
 		  // 行标题
 		  var dayLabels = svg.selectAll(".nameLabel")
-			  .data(adjmatrix)
+			  .data(years)
 			  .enter()    // 为data中每一项创建一个".dayLabel"
 			  .append("text")    // 为days中每一项创建一的".dayLabel"添加文本，下面全是设置文本的属性
-				.text(function (d, i) { return mindata[i].month; })
+				.text(function (d, i) { return d; })
 				.attr("x", 0)
 				.attr("y", function (d, i) { return i * (gridSize)-30; })
 				.style("text-anchor", "end")
 				.attr("transform", "translate(-4," + gridSize  + ")")
-				.attr("class", function (d, i) 
-						{ return ((i >= 0 && i <= 4) ? "nameLabel mono axis axis-workweek" : "nameLabel mono axis axis-worktime"); }
-					);
  
 		  // 列标题
 		  var timeLabels = svg.selectAll(".testLabel")
 			  .data(years)
-			  .enter().append("text")
+			  .enter()
+			  .append("text")
 				.text(function(d) { return d; })
 				.attr("x", function(d, i) { return i * gridSize; })
 				.attr("y", 0)
@@ -210,9 +208,9 @@ function ended(event, d) {
 			var minT = [];
 			for (var i = 0; i < 46; i++){
 				for (var j = 0; j< 46; j++){
-				}
-				minT[i*46+j] = parseInt(adjmatrix[i].years[j]);
-
+				
+				minT[i*46+j] = parseInt(adjmatrix[i][years[j]]);
+}
 		  };
 		
 		  
@@ -241,7 +239,7 @@ function ended(event, d) {
 
 		  // 颜色比例尺
 		  var colorScale = d3.scale.quantile()        // 按分位数取值，可使每个区域内元素个数相等
-			  .domain([d3.min(minT),d3.max(maxT)])  // 定义域
+			  .domain(d3.min(minT))  // 定义域
 			  // domain([0, n, 数据的最大值]);
 			  .range(colors);    // 值域：是颜色数组，函数的返回值是代表某种颜色的字符串
 			
